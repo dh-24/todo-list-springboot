@@ -81,7 +81,7 @@ and flexibility of cloud computing led to widespread adoption. By 2013,
 many businesses were moving to the cloud, paving the way for today’s 
 extensive cloud integration. Today, cloud computing is widely seen as essential
 for modern business operations. It's used to power everything from
-startups to enterprises.
+startups to enterprises. 
 
 ---
 
