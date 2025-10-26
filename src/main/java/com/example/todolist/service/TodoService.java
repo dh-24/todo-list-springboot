@@ -2,12 +2,16 @@ package com.example.todolist.service;
 
 import com.example.todolist.model.Todo;
 import com.example.todolist.repository.TodoRepository;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class TodoService {
+
+    private static final Logger logger = LoggerFactory.getLogger(TodoService.class);
     private final TodoRepository todoRepository;
 
     public TodoService(TodoRepository todoRepository) {
@@ -30,6 +34,7 @@ public class TodoService {
         Todo todo = todoRepository.findById(id).orElseThrow();
         todo.setCompleted(!todo.isCompleted());
         todoRepository.save(todo);
+        logger.info("Toggled completion for todo id {} to {}", id, todo.isCompleted());
     }
 
     public Todo getTodoById(Long id) {
