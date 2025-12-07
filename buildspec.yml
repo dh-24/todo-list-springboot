@@ -1,18 +1,87 @@
 version: 0.2
 
+env:
+  variables:
+    DEPLOY_DIR: deploy
+
 phases:
+  install:
+    runtime-versions:
+      java: corretto11
+    commands:
+      - echo "Install phase - ensure zip/unzip are available"
+      - if ! command -v zip >/dev/null 2>&1; then apt-get update -y && apt-get install -y zip unzip || true; fi
+      - echo "Listing top-level files:"
+      - ls -la
+
   pre_build:
     commands:
-      - echo "Build (if needed) and search for JAR"
-      - mvn clean package -DskipTests || echo "Skipping build, no Maven project"
-      - JAR_PATH=$(find . -type f -name "*.jar" | head -n 1)
-      - echo "Will deploy JAR at path: $JAR_PATH"
+      - echo "PRE_BUILD: try to find existing zip or jar in repo (excluding target/)"
+      # prefer an existing .zip (maybe named toDoList.zip) in the repo (anywhere)
+      - ZIP_PATH=$(find . -type f -name "*.zip" -not -path "./target/*" | head -n 1 || true)
+      - JAR_PATH=$(find . -type f -name "*.jar" -not -path "./target/*" | head -n 1 || true)
+      - echo "Found ZIP_PATH = [$ZIP_PATH]"
+      - echo "Found JAR_PATH = [$JAR_PATH]"
+      # If no jar found, try building with maven (if there is a pom.xml)
+      - |
+        if [ -z "$JAR_PATH" ] || [ "$JAR_PATH" = "" ]; then
+          if [ -f pom.xml ]; then
+            echo "No JAR found — building project with Maven..."
+            mvn clean package -DskipTests
+            # pick the first JAR produced under target/
+            JAR_PATH=$(find target -type f -name "*.jar" | head -n 1 || true)
+            echo "After mvn, JAR_PATH = [$JAR_PATH]"
+          else
+            echo "No pom.xml and no jar found. Will still attempt to use ZIP if present."
+          fi
+        fi
+      - echo "Final chosen JAR_PATH = [$JAR_PATH]"
+      - echo "Final chosen ZIP_PATH = [$ZIP_PATH]"
+
   build:
     commands:
-      - mkdir deploy
-      - cp "$JAR_PATH" deploy/application.jar
-      - cd deploy
-      - zip ../app-deploy.zip application.jar
+      - echo "BUILD: prepare deploy bundle"
+      - rm -rf $DEPLOY_DIR || true
+      - mkdir -p $DEPLOY_DIR
+      # If we found a zip, try to extract a jar from it
+      - |
+        if [ -n "$ZIP_PATH" ] && [ "$ZIP_PATH" != "" ]; then
+          echo "Using existing zip: $ZIP_PATH"
+          TMP_DIR=$(mktemp -d)
+          unzip -q "$ZIP_PATH" -d "$TMP_DIR" || echo "unzip failed or zip is not standard"
+          # find any jar inside extracted zip
+          FOUND_JAR=$(find "$TMP_DIR" -type f -name "*.jar" | head -n 1 || true)
+          if [ -n "$FOUND_JAR" ] && [ "$FOUND_JAR" != "" ]; then
+            echo "Found jar inside zip at: $FOUND_JAR"
+            cp "$FOUND_JAR" "$DEPLOY_DIR/application.jar"
+          else
+            echo "No jar found inside the zip."
+          fi
+          rm -rf "$TMP_DIR"
+        fi
+      - |
+        if [ -z "$ZIP_PATH" ] || [ "$ZIP_PATH" = "" ] || [ ! -f "$DEPLOY_DIR/application.jar" ]; then
+          if [ -n "$JAR_PATH" ] && [ "$JAR_PATH" != "" ]; then
+            echo "Copying jar $JAR_PATH -> $DEPLOY_DIR/application.jar"
+            cp "$JAR_PATH" "$DEPLOY_DIR/application.jar"
+          fi
+        fi
+      - |
+        if [ ! -f "$DEPLOY_DIR/application.jar" ]; then
+          echo "ERROR: No JAR to deploy. Listing repo for debugging:"
+          ls -R .
+          exit 1
+        fi
+      - cd $DEPLOY_DIR
+      - zip -q ../app-deploy.zip application.jar
+      - cd ..
+      - echo "Created app-deploy.zip with:"
+      - unzip -l app-deploy.zip
+
 artifacts:
   files:
     - app-deploy.zip
+
+cache:
+  paths:
+    - '/root/.m2/**/*'
