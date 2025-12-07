@@ -1,15 +1,22 @@
 version: 0.2
+
 phases:
+  pre_build:
+    commands:
+      - echo "Searching for JAR file..."
+      - find . -name "*.jar"
+
   build:
     commands:
-
-      # ToDoList build commands
-      - cd toDoList
-      - mvn clean install -DskipTests
+      - echo "Preparing Elastic Beanstalk deployment bundle..."
+      - mkdir deploy
+      # Automatically find the JAR in the repo
+      - JAR_FILE=$(find . -maxdepth 2 -name "*.jar" | head -n 1)
+      - echo "Found JAR: $JAR_FILE"
+      - cp "$JAR_FILE" deploy/application.jar
+      - cd deploy
+      - zip ../app-deploy.zip application.jar
 
 artifacts:
   files:
-
-    # ToDoList artifact
-    - toDoList/target/*.jar
-  discard-paths: yes
+    - app-deploy.zip
