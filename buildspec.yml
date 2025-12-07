@@ -13,3 +13,5 @@ artifacts:
     # ToDoList artifact
     - toDoList/target/*.jar
   discard-paths: yes
+
+  # Editing project
