@@ -1,17 +1,22 @@
 version: 0.2
+
 phases:
+  pre_build:
+    commands:
+      - echo "Listing repo content..."
+      - ls -R .
   build:
     commands:
-
-      # ToDoList build commands
-      - cd toDoList
-      - mvn clean install -DskipTests
-
+      - echo "Preparing Elastic Beanstalk deployment bundle..."
+      # Create deploy folder
+      - mkdir deploy
+      # Extract the JAR from your existing ZIP
+      - unzip -o toDoList.zip -d deploy/
+      # Rename JAR to application.jar for EB
+      - mv deploy/toDoList-0.0.1-SNAPSHOT.jar deploy/application.jar
+      # Zip the application.jar into the deployment ZIP
+      - cd deploy
+      - zip ../app-deploy.zip application.jar
 artifacts:
   files:
-
-    # ToDoList artifact
-    - toDoList/target/*.jar
-  discard-paths: yes
-
-  # Editing project
+    - app-deploy.zip
