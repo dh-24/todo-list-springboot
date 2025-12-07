@@ -1,6 +1,6 @@
-# CST 323 – Activity 1
+# CST 323 – Activity 2
 **Name: Daniel Hanson**  
-**Due Date: 26 October 2025**  
+**Due Date: 2 November 2025**  
 **Instructor: Professor Idahosa**
 
 ---
