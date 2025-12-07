@@ -1,14 +1,15 @@
 version: 0.2
-
 phases:
-  install:
-    commands:
-      - echo Installing Maven...
-      - mvn --version
   build:
     commands:
-      - echo Building the Spring Boot application...
-      - mvn package -DskipTests
+
+      # ToDoList build commands
+      - cd toDoList
+      - mvn clean install -DskipTests
+
 artifacts:
   files:
-    - target/*.jar
+
+    # ToDoList artifact
+    - toDoList/target/*.jar
+  discard-paths: yes
