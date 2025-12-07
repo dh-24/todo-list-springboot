@@ -3,20 +3,16 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - echo "Searching for JAR file..."
-      - find . -name "*.jar"
-
+      - echo "Build (if needed) and search for JAR"
+      - mvn clean package -DskipTests || echo "Skipping build, no Maven project"
+      - JAR_PATH=$(find . -type f -name "*.jar" | head -n 1)
+      - echo "Will deploy JAR at path: $JAR_PATH"
   build:
     commands:
-      - echo "Preparing Elastic Beanstalk deployment bundle..."
       - mkdir deploy
-      # Automatically find the JAR in the repo
-      - JAR_FILE=$(find . -maxdepth 2 -name "*.jar" | head -n 1)
-      - echo "Found JAR: $JAR_FILE"
-      - cp "$JAR_FILE" deploy/application.jar
+      - cp "$JAR_PATH" deploy/application.jar
       - cd deploy
       - zip ../app-deploy.zip application.jar
-
 artifacts:
   files:
     - app-deploy.zip
