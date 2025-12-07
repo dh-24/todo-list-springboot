@@ -5,13 +5,13 @@ import com.example.todolist.service.TodoService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+
 
 @Controller
 public class TodoController {
 
-    private static final Logger logger = LoggerFactory.getLogger(TodoController.class);
+
     private final TodoService todoService;
 
     public TodoController(TodoService todoService) {
@@ -36,7 +36,6 @@ public class TodoController {
     @PostMapping("/add")
     public String addTodo(@ModelAttribute Todo todo) {
         todoService.addTodo(todo);
-        logger.info("Added new todo: {}", todo.getTask());
         return "redirect:/";
     }
 
@@ -52,7 +51,6 @@ public class TodoController {
     @GetMapping("/delete/{id}")
     public String deleteTodo(@PathVariable Long id) {
         todoService.deleteTodo(id);
-        logger.info("Deleted todo with id: {}", id);
         return "redirect:/";
     }
 
